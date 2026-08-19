@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<script>
+  document.documentElement.dataset.theme = localStorage.getItem("appTheme") || "dark";
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#10121a">
+<title>Car-Bay | Dashboard</title>
+<link rel="icon" href="assets/favicon.ico">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="styles.css">
+<style>
+  body { padding-bottom: calc(var(--nav-h) + 14px + env(safe-area-inset-bottom)); }
+
+  .topbar {
+    position: sticky; top: 0; z-index: 40;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar-inner { display: flex; align-items: center; justify-content: space-between; padding: 14px; }
+  .topbar-brand { display: flex; align-items: center; gap: 9px; font-family: var(--font-display); font-size: 20px; letter-spacing: .02em; }
+  .topbar-brand svg { width: 26px; height: 26px; }
+  .topbar-brand em { font-style: normal; color: var(--accent); }
+  .topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+  /* ---- Investor hero ---- */
+  .hero {
+    position: relative; overflow: hidden;
+    background: linear-gradient(160deg, var(--surface-2), var(--surface) 65%);
+    border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 20px; margin: 14px 0 12px;
+    box-shadow: var(--shadow-1);
+  }
+  .hero::before {
+    content: ""; position: absolute; top: -80px; right: -60px; width: 220px; height: 220px;
+    background: radial-gradient(circle, var(--accent-glow), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; position: relative; }
+  .hero-kicker { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; color: var(--accent-2); margin-bottom: 6px; }
+  .hero-value { font-family: var(--font-mono); font-weight: 700; font-size: 34px; letter-spacing: -0.01em; }
+  .hero-value small { font-size: 16px; color: var(--text-muted); font-weight: 600; }
+  .hero-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  .vip-chip {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+  }
+  .vip-badge {
+    background: var(--accent-glow); color: var(--accent-2); font-weight: 800; font-size: 12px;
+    padding: 6px 11px; border-radius: var(--radius-pill); white-space: nowrap;
+  }
+
+  .hero-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 16px;
+  }
+  .stat-mini {
+    background: var(--bg-soft); border: 1px solid var(--border); border-radius: 12px; padding: 11px 12px;
+  }
+  .stat-mini .lbl { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+  .stat-mini .val { font-family: var(--font-mono); font-weight: 700; font-size: 15px; }
+  .stat-mini .val.positive { color: var(--positive); }
+
+  .hero-gauge-row {
+    display: flex; align-items: center; gap: 14px; margin-top: 16px;
+    padding-top: 14px; border-top: 1px solid var(--border);
+  }
+  .hero-gauge-copy { flex: 1; }
+  .hero-gauge-copy .t { font-weight: 800; font-size: 13.5px; margin-bottom: 2px; }
+  .hero-gauge-copy .s { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+
+  /* ---- Section headers ---- */
+  .section-title { display: flex; align-items: center; justify-content: space-between; margin: 18px 2px 10px; }
+  .section-title h3 { margin: 0; font-size: 16px; font-weight: 800; }
+  .section-title .see-all { font-size: 12.5px; color: var(--accent-2); font-weight: 700; }
+
+  /* ---- Search / categories ---- */
+  .search-bar-wrap { position: relative; margin-bottom: 10px; }
+  .search-bar-wrap .icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--text-faint); font-size: 15px; }
+  #search-input { padding-left: 38px; }
+
+  .categories { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 6px; margin-bottom: 4px; scrollbar-width: none; }
+  .categories::-webkit-scrollbar { display: none; }
+  .categories button {
+    flex-shrink: 0; padding: 9px 15px; border: 1px solid var(--border-strong); border-radius: var(--radius-pill);
+    background: var(--surface); color: var(--text-muted); font-weight: 700; font-size: 13px; white-space: nowrap;
+  }
+  .categories button.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+  /* ---- Product / car cards ---- */
+  .product-card {
+    display: flex; gap: 12px; padding: 12px; margin-bottom: 10px;
+  }
+  .product-thumb {
+    width: 84px; height: 84px; border-radius: 12px; flex-shrink: 0; overflow: hidden;
+    background: var(--surface-2); display: flex; align-items: center; justify-content: center;
+  }
+  .product-thumb svg, .product-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .product-body { flex: 1; min-width: 0; }
+  .product-body h3 { margin: 0 0 3px; font-size: 15px; font-weight: 800; }
+  .product-specs { font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px; }
+  .product-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .product-price { font-family: var(--font-mono); font-weight: 700; font-size: 13.5px; }
+  .product-income { font-family: var(--font-mono); font-weight: 700; font-size: 12.5px; color: var(--positive); }
+  .buy-btn { border: none; border-radius: 10px; padding: 9px 14px; font-weight: 800; font-size: 12.5px; background: var(--accent); color: var(--accent-ink); }
+  .buy-btn:disabled { background: var(--surface-2); color: var(--text-faint); }
+
+  .timer-chip {
+    font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; color: var(--accent-2);
+    background: var(--accent-glow); padding: 4px 9px; border-radius: var(--radius-pill); display: inline-block;
+  }
+  .timer-chip.ready { color: var(--positive); background: var(--positive-soft); }
+
+  /* ---- Profile view ---- */
+  .profile-hero { display: flex; align-items: center; gap: 14px; padding: 16px; margin-bottom: 16px; }
+  .avatar-lg { width: 58px; height: 58px; border-radius: 50%; object-fit: cover; background: var(--surface-2); border: 2px solid var(--border-strong); }
+  .profile-menu { display: flex; flex-direction: column; gap: 10px; }
+  .profile-btn {
+    width: 100%; border: 1px solid var(--border); border-radius: 14px; padding: 15px 16px;
+    background: var(--surface); color: var(--text); font-size: 14.5px; font-weight: 700;
+    text-align: left; display: flex; align-items: center; gap: 12px;
+  }
+  .profile-btn:hover { background: var(--surface-hover); }
+  .profile-btn .pi { font-size: 18px; width: 22px; text-align: center; }
+  .profile-btn .arrow { margin-left: auto; color: var(--text-faint); }
+  .profile-btn.danger { color: var(--negative); }
+
+  /* ---- Check-in / tasks ---- */
+  .checkin-card { padding: 18px; text-align: center; margin-bottom: 14px; }
+  .checkin-flame { font-size: 30px; margin-bottom: 6px; }
+  .checkin-streak { font-family: var(--font-mono); font-weight: 700; font-size: 22px; }
+  .checkin-sub { font-size: 12.5px; color: var(--text-muted); margin: 4px 0 14px; }
+
+  .leader-row { display: flex; align-items: center; gap: 10px; padding: 11px 4px; border-bottom: 1px solid var(--border); }
+  .leader-row:last-child { border-bottom: none; }
+  .leader-rank { width: 26px; text-align: center; font-family: var(--font-mono); font-weight: 700; color: var(--text-muted); }
+  .leader-rank.top1 { color: var(--accent-2); }
+  .leader-name { flex: 1; font-weight: 700; font-size: 13.5px; }
+  .leader-val { font-family: var(--font-mono); font-weight: 700; color: var(--positive); font-size: 13px; }
+
+  /* ---- Admin ---- */
+  .admin-stats { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; margin-bottom: 16px; }
+  .admin-stat { padding: 13px; }
+  .admin-stat .lbl { font-size: 11px; color: var(--text-muted); }
+  .admin-stat .val { font-family: var(--font-mono); font-weight: 700; font-size: 18px; margin-top: 3px; }
+
+  .admin-tabs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 12px; }
+  .admin-tabs button { flex-shrink: 0; padding: 9px 13px; border-radius: var(--radius-pill); border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-muted); font-weight: 700; font-size: 12.5px; }
+  .admin-tabs button.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .admin-panel { display: none; }
+  .admin-panel.active { display: block; }
+
+  .admin-row { padding: 13px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 8px; }
+  .admin-row-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .admin-row-actions { display: flex; gap: 8px; }
+  .admin-row-actions button { flex: 1; }
+
+  .fab {
+    position: fixed; right: 18px; bottom: calc(var(--nav-h) + 18px + env(safe-area-inset-bottom));
+    width: 54px; height: 54px; border-radius: 50%; border: none;
+    background: var(--accent); color: var(--accent-ink); font-size: 24px; font-weight: 800;
+    box-shadow: var(--shadow-glow); z-index: 45;
+  }
+
+  /* ---- Nav ---- */
+  .nav {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+    background: color-mix(in srgb, var(--bg) 85%, transparent);
+    backdrop-filter: blur(14px);
+    border-top: 1px solid var(--border);
+    padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+  }
+  .nav-inner { max-width: 920px; margin: 0 auto; display: flex; justify-content: space-around; }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 6px 10px; border-radius: 12px; color: var(--text-faint); font-size: 10.5px; font-weight: 700;
+    min-width: 56px;
+  }
+  .nav-item .ni-icon { font-size: 19px; }
+  .nav-item.active-tab { color: var(--accent-2); }
+
+  .page-view { display: none; animation: fade-in .2s ease; }
+  .page-view.active { display: block; }
+  @keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .deposit-address-row { display: flex; gap: 8px; align-items: center; }
+  .deposit-address-row input { flex: 1; }
+</style>
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<header class="topbar">
+  <div class="container topbar-inner">
+    <div class="topbar-brand">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" rx="22" fill="#10121a"/>
+        <circle cx="50" cy="50" r="33" fill="none" stroke="#f2a93b" stroke-width="6" stroke-linecap="round" stroke-dasharray="155 210" transform="rotate(135 50 50)"/>
+        <line x1="50" y1="50" x2="68" y2="34" stroke="#f5f3ee" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="50" cy="50" r="5" fill="#f5f3ee"/>
+      </svg>
+      Car<em>-Bay</em>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="theme-btn" aria-label="Tema">🌙</button>
+      <button class="icon-btn danger" id="logout-btn" aria-label="Çıxış">⎋</button>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ================= EV (Home) ================= -->
+  <div id="view-ev" class="page-view active">
+
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <div class="hero-kicker">Portfeliniz</div>
+          <div class="hero-value tabular"><span id="hero-total">$0.00</span></div>
+          <div class="hero-sub">Balans + avtomobil investisiyaları</div>
+        </div>
+        <div class="vip-chip">
+          <span class="vip-badge" id="vip-badge-hero">LV0</span>
+        </div>
+      </div>
+
+      <div class="hero-grid">
+        <div class="stat-mini"><div class="lbl">💰 Balans</div><div class="val tabular" id="stat-balance">$0.00</div></div>
+        <div class="stat-mini"><div class="lbl">🚗 İnvestisiya</div><div class="val tabular" id="stat-invested">$0.00</div></div>
+        <div class="stat-mini"><div class="lbl">📈 Gündəlik gəlir</div><div class="val tabular positive" id="stat-daily">$0.00</div></div>
+        <div class="stat-mini"><div class="lbl">📊 İllik ROI</div><div class="val tabular positive" id="stat-roi">0%</div></div>
+      </div>
+
+      <div class="hero-gauge-row">
+        <div class="gauge-wrap">
+          <svg viewBox="0 0 100 100">
+            <circle class="gauge-track" cx="50" cy="50" r="42" fill="none" stroke-width="8"/>
+            <circle class="gauge-progress" id="vip-gauge-circle" cx="50" cy="50" r="42" fill="none" stroke-width="8"
+              stroke-dasharray="264" stroke-dashoffset="264" transform="rotate(-90 50 50)"/>
+          </svg>
+          <div class="gauge-center">
+            <b id="gauge-percent">0%</b>
+            <span>Növbəti VIP</span>
+          </div>
+        </div>
+        <div class="hero-gauge-copy">
+          <div class="t" id="vip-next-title">LV1-ə qədər</div>
+          <div class="s" id="vip-next-sub">Daha çox avtomobilə investisiya edərək VIP səviyyənizi yüksəldin və gəlir faizini artırın.</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="search-bar-wrap">
+      <span class="icon">🔍</span>
+      <input type="text" class="input" id="search-input" placeholder="Avtomobil axtar...">
+    </div>
+
+    <div class="categories" id="category-filters">
+      <button class="active" data-cat="all">Hamısı</button>
+      <button data-cat="sport">Sport</button>
+      <button data-cat="suv">SUV</button>
+      <button data-cat="classic">Klassik</button>
+    </div>
+
+    <div id="product-list">
+      <div class="card skeleton" style="height:100px; margin-bottom:10px;"></div>
+      <div class="card skeleton" style="height:100px; margin-bottom:10px;"></div>
+    </div>
+  </div>
+
+  <!-- ================= Mənim Maşınlarım ================= -->
+  <div id="view-cars" class="page-view">
+    <div class="section-title"><h3>🚗 Mənim Maşınlarım</h3></div>
+    <div id="my-cars-list">
+      <div class="empty-state card">
+        <div class="empty-icon">🅿️</div>
+        <div class="empty-title">Qarajınız boşdur</div>
+        <div class="empty-sub">Ev səhifəsindən maşın alaraq gəlir qazanmağa başlayın.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= Tapşırıqlar ================= -->
+  <div id="view-tasks" class="page-view">
+    <div class="section-title"><h3>📋 Gündəlik Tapşırıqlar</h3></div>
+
+    <div class="card checkin-card">
+      <div class="checkin-flame">🔥</div>
+      <div class="checkin-streak"><span id="checkin-streak-val">0</span> gün ardıcıl</div>
+      <div class="checkin-sub" id="checkin-sub-text">Hər gün daxil olub bonus qazanın</div>
+      <button class="btn btn-primary btn-block" id="checkin-btn">🎁 Bugünkü Bonusu Al ($0.25)</button>
+    </div>
+
+    <div class="section-title"><h3>🏆 Liderlər Lövhəsi</h3></div>
+    <div class="card" style="padding: 6px 14px;">
+      <div id="leaderboard-list">
+        <p style="text-align:center; color:var(--text-muted); padding:16px 0;">Yüklənir...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= Profil ================= -->
+  <div id="view-profile" class="page-view">
+    <div class="card profile-hero">
+      <img src="" id="profile-img" class="avatar-lg" alt="Profil" onerror="this.style.visibility='hidden'">
+      <div style="flex:1; min-width:0;">
+        <div style="font-weight:800; font-size:16.5px;" id="profile-name">Yüklənir...</div>
+        <div style="font-size:12.5px; color:var(--text-muted);" id="profile-email">...</div>
+        <div style="margin-top:5px;"><span class="badge badge-amber" id="profile-vip">Standart Hesab</span></div>
+      </div>
+    </div>
+
+    <div class="profile-menu">
+      <button id="deposit-btn" class="profile-btn"><span class="pi">💳</span> Depozit et <span class="arrow">›</span></button>
+      <button id="withdraw-btn" class="profile-btn"><span class="pi">💸</span> Nağdlaşdırma <span class="arrow">›</span></button>
+      <button id="history-btn" class="profile-btn"><span class="pi">📜</span> Əməliyyat tarixçəsi <span class="arrow">›</span></button>
+      <button id="referral-btn" class="profile-btn"><span class="pi">👥</span> Referal komandam <span class="arrow">›</span></button>
+      <button id="password-btn" class="profile-btn"><span class="pi">🔐</span> Profil və Şifrə ayarları <span class="arrow">›</span></button>
+      <button id="logout-btn-2" class="profile-btn danger"><span class="pi">🚪</span> Hesabdan çıxış <span class="arrow">›</span></button>
+    </div>
+
+    <p id="uid-display" style="font-size: 10.5px; color: var(--text-faint); word-break: break-all; margin-top:16px; text-align:center;"></p>
+  </div>
+
+  <!-- ================= Admin ================= -->
+  <div id="view-admin" class="page-view">
+    <div class="section-title"><h3>👑 Admin Panel</h3></div>
+
+    <div class="admin-stats">
+      <div class="card admin-stat"><div class="lbl">İstifadəçilər</div><div class="val" id="admin-stat-users">–</div></div>
+      <div class="card admin-stat"><div class="lbl">Gözləyən sorğular</div><div class="val" id="admin-stat-pending">–</div></div>
+      <div class="card admin-stat"><div class="lbl">Ümumi balans (sistem)</div><div class="val" id="admin-stat-balance">–</div></div>
+      <div class="card admin-stat"><div class="lbl">Aktiv maşınlar</div><div class="val" id="admin-stat-products">–</div></div>
+    </div>
+
+    <div class="admin-tabs" id="admin-tabs">
+      <button class="active" data-panel="admin-deposits">Depozitlər</button>
+      <button data-panel="admin-withdrawals">Nağdlaşdırmalar</button>
+      <button data-panel="admin-products">Maşınlar</button>
+      <button data-panel="admin-users">İstifadəçilər</button>
+    </div>
+
+    <div class="admin-panel active" id="admin-deposits">
+      <div id="admin-deposits-list"><p style="text-align:center;color:var(--text-muted);">Yüklənir...</p></div>
+    </div>
+    <div class="admin-panel" id="admin-withdrawals">
+      <div id="admin-withdrawals-list"><p style="text-align:center;color:var(--text-muted);">Yüklənir...</p></div>
+    </div>
+    <div class="admin-panel" id="admin-products">
+      <button class="btn btn-primary btn-block" id="add-product-btn" style="margin-bottom:12px;">+ Yeni Maşın Əlavə Et</button>
+      <div id="admin-products-list"><p style="text-align:center;color:var(--text-muted);">Yüklənir...</p></div>
+    </div>
+    <div class="admin-panel" id="admin-users">
+      <div class="search-bar-wrap">
+        <span class="icon">🔍</span>
+        <input type="text" class="input" id="admin-user-search" placeholder="Email və ya ad üzrə axtar...">
+      </div>
+      <div id="admin-users-list"><p style="text-align:center;color:var(--text-muted);">Yüklənir...</p></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ================= Modallar ================= -->
+
+<div id="deposit-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-head"><h2>💰 USDT Depozit</h2><button class="icon-btn" data-close="deposit-modal">✕</button></div>
+    <div class="field">
+      <label>TRC20 Ünvanı</label>
+      <div class="deposit-address-row">
+        <input id="trc20-address" class="input mono" type="text" value="TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t" readonly>
+        <button class="btn btn-ghost btn-sm" id="copy-trc20">Kopyala</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>BEP20 Ünvanı</label>
+      <div class="deposit-address-row">
+        <input id="bep20-address" class="input mono" type="text" value="0x55d398326f99059fF775485246999027B3197955" readonly>
+        <button class="btn btn-ghost btn-sm" id="copy-bep20">Kopyala</button>
+      </div>
+    </div>
+    <hr class="hairline">
+    <div class="field">
+      <label>Depozit Məbləği ($)</label>
+      <input id="deposit-amount" class="input" type="number" min="1" step="0.01" value="10">
+    </div>
+    <div class="field">
+      <label>TXID (Tranzaksiya Kodu)</label>
+      <input id="txid" class="input" type="text" placeholder="Şəbəkədən aldığınız TXID">
+    </div>
+    <button class="btn btn-primary btn-block" id="deposit-send">Sorğunu Göndər</button>
+  </div>
+</div>
+
+<div id="withdraw-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-head"><h2>💸 USDT Nağdlaşdırma</h2><button class="icon-btn" data-close="withdraw-modal">✕</button></div>
+    <div class="field">
+      <label>Şəbəkə</label>
+      <select id="withdraw-network" class="input">
+        <option value="TRC20">TRC20</option>
+        <option value="BEP20">BEP20</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>USDT Cüzdan Ünvanı</label>
+      <input id="withdraw-address" class="input" type="text" placeholder="T... və ya 0x...">
+    </div>
+    <div class="field">
+      <label>Məbləğ ($)</label>
+      <input id="withdraw-amount" class="input" type="number" min="1" step="0.01" placeholder="Minimum $10">
+    </div>
+    <button class="btn btn-primary btn-block" id="withdraw-send">Sorğunu Göndər</button>
+  </div>
+</div>
+
+<div id="history-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-head"><h2>📜 Əməliyyat Tarixçəsi</h2><button class="icon-btn" data-close="history-modal">✕</button></div>
+    <div id="history-list" style="max-height:60vh; overflow-y:auto;"></div>
+  </div>
+</div>
+
+<div id="product-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-head"><h2 id="product-modal-title">Yeni Maşın</h2><button class="icon-btn" data-close="product-modal">✕</button></div>
+    <input type="hidden" id="pf-id">
+    <div class="field"><label>Ad</label><input class="input" id="pf-name" placeholder="BMW M4 Competition"></div>
+    <div class="field"><label>Kateqoriya</label>
+      <select class="input" id="pf-category">
+        <option value="sport">Sport</option>
+        <option value="suv">SUV</option>
+        <option value="classic">Klassik</option>
+      </select>
+    </div>
+    <div class="field"><label>Qiymət ($)</label><input class="input" type="number" id="pf-price" placeholder="1200"></div>
+    <div class="field"><label>Gündəlik Gəlir ($)</label><input class="input" type="number" id="pf-income" placeholder="18"></div>
+    <div class="field"><label>Bəyiyyət Gücü (HP)</label><input class="input" id="pf-hp" placeholder="503"></div>
+    <div class="field"><label>Mühərrik</label><input class="input" id="pf-engine" placeholder="3.0L Turbo"></div>
+    <div class="field"><label>Sürət (0-100)</label><input class="input" id="pf-speed" placeholder="3.8s"></div>
+    <div class="field"><label>Şəkil URL (istəyə bağlı)</label><input class="input" id="pf-image" placeholder="https://..."></div>
+    <button class="btn btn-primary btn-block" id="product-save-btn">Yadda Saxla</button>
+    <button class="btn btn-danger btn-block hidden" id="product-delete-btn" style="margin-top:8px;">Maşını Sil</button>
+  </div>
+</div>
+
+<div class="loading-veil hidden" id="loading" style="position:fixed;inset:0;z-index:10001;align-items:center;justify-content:center;background:rgba(8,9,13,.55);backdrop-filter:blur(3px);">
+  <div class="spinner" style="width:40px;height:40px;border-radius:50%;border:3px solid rgba(242,169,59,.25);border-top-color:var(--accent);animation:spin .8s linear infinite;"></div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg);}} .loading-veil.show{display:flex;}</style>
+
+<nav class="nav" id="main-navigation">
+  <div class="nav-inner">
+    <div class="nav-item active-tab" data-target="view-ev"><span class="ni-icon">🏠</span>Ev</div>
+    <div class="nav-item" data-target="view-cars"><span class="ni-icon">🚗</span>Maşınlarım</div>
+    <div class="nav-item" data-target="view-tasks"><span class="ni-icon">📋</span>Tapşırıqlar</div>
+    <div class="nav-item" data-target="view-profile"><span class="ni-icon">👤</span>Profil</div>
+    <div class="nav-item hidden" data-target="view-admin" id="nav-admin"><span class="ni-icon">👑</span>Admin</div>
+  </div>
+</nav>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

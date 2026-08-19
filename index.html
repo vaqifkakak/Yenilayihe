@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<script>
+  // Referal kodunu URL-dən tutub dərhal yadda saxlayırıq (səhifə tam yüklənməmiş olsa belə)
+  (function () {
+    var ref = new URLSearchParams(window.location.search).get("ref");
+    if (ref) localStorage.setItem("referredBy", ref);
+    var theme = localStorage.getItem("appTheme") || "dark";
+    document.documentElement.dataset.theme = theme;
+  })();
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#10121a">
+<title>Car-Bay | Giriş</title>
+<link rel="icon" href="assets/favicon.ico">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="styles.css">
+<style>
+  body.auth-body {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, rgba(242,169,59,0.10), transparent 60%),
+      var(--bg);
+    position: relative; overflow-x: hidden;
+  }
+
+  .auth-wrap {
+    flex: 1; display: flex; flex-direction: column; justify-content: center;
+    max-width: 420px; width: 100%; margin: 0 auto; padding: 28px 20px 40px;
+  }
+
+  .brand-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 22px; }
+  .brand-mark { width: 34px; height: 34px; }
+  .brand-name { font-family: var(--font-display); font-size: 24px; letter-spacing: .03em; }
+  .brand-name em { font-style: normal; color: var(--accent); }
+
+  .auth-hero { text-align: center; margin-bottom: 26px; }
+  .auth-kicker {
+    font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--accent-2); margin-bottom: 10px;
+  }
+  .auth-title { font-family: var(--font-display); font-size: 40px; line-height: 1; letter-spacing: .01em; margin: 0 0 8px; }
+  .auth-sub { color: var(--text-muted); font-size: 14px; line-height: 1.5; margin: 0; }
+
+  .auth-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 22px 20px;
+    box-shadow: var(--shadow-2);
+  }
+
+  .seg {
+    display: flex; background: var(--surface-2); border-radius: var(--radius-pill);
+    padding: 4px; margin-bottom: 20px; border: 1px solid var(--border);
+  }
+  .seg button {
+    flex: 1; border: none; background: transparent; padding: 10px 0;
+    border-radius: var(--radius-pill); font-weight: 700; font-size: 13.5px;
+    color: var(--text-muted); transition: .18s ease;
+  }
+  .seg button.active { background: var(--accent); color: var(--accent-ink); box-shadow: var(--shadow-glow); }
+
+  #fullname-field { display: none; }
+
+  .ignition-btn {
+    position: relative; width: 100%; border: none; border-radius: var(--radius-sm);
+    padding: 15px 18px; font-weight: 800; font-size: 15.5px; letter-spacing: .01em;
+    background: linear-gradient(180deg, var(--accent-2), var(--accent));
+    color: var(--accent-ink); box-shadow: var(--shadow-glow);
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: transform .15s ease;
+  }
+  .ignition-btn:active { transform: scale(.98); }
+  .ignition-dot {
+    width: 9px; height: 9px; border-radius: 50%; background: var(--accent-ink);
+    box-shadow: 0 0 0 3px rgba(25,17,6,.15);
+  }
+
+  .divider-row { display: flex; align-items: center; gap: 10px; margin: 18px 0; color: var(--text-faint); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+  .divider-row::before, .divider-row::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+  .google-btn {
+    width: 100%; border: 1px solid var(--border-strong); background: var(--surface-2);
+    border-radius: var(--radius-sm); padding: 13px; font-weight: 700; font-size: 14px;
+    display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--text);
+  }
+  .google-btn:hover { background: var(--surface-hover); }
+  .google-g { width: 18px; height: 18px; }
+
+  .auth-links {
+    display: flex; justify-content: space-between; align-items: center; margin-top: 16px;
+    font-size: 12.5px; color: var(--text-muted);
+  }
+  .auth-links button { background: none; border: none; color: var(--text-muted); font-size: 12.5px; padding: 0; }
+  .link-accent { color: var(--accent-2); font-weight: 700; }
+
+  .switch-line { text-align: center; margin-top: 20px; font-size: 13.5px; color: var(--text-muted); }
+  .switch-line span { color: var(--accent-2); font-weight: 800; cursor: pointer; }
+
+  .theme-fab {
+    position: fixed; top: max(16px, env(safe-area-inset-top)); right: 16px; z-index: 50;
+  }
+
+  .loading-veil {
+    position: fixed; inset: 0; z-index: 10001; display: none;
+    align-items: center; justify-content: center; background: rgba(8,9,13,.55); backdrop-filter: blur(3px);
+  }
+  .loading-veil.show { display: flex; }
+  .spinner {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 3px solid rgba(242,169,59,.25); border-top-color: var(--accent);
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .gauge-deco { position: absolute; top: -60px; right: -60px; width: 220px; height: 220px; opacity: .35; pointer-events: none; }
+  body.light-mode .gauge-deco { opacity: .18; }
+</style>
+</head>
+<body class="auth-body">
+
+<div id="toast-container"></div>
+
+<button class="icon-btn theme-fab" id="theme-btn" aria-label="Tema">🌙</button>
+
+<svg class="gauge-deco" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="100" cy="100" r="86" fill="none" stroke="var(--accent)" stroke-width="1" stroke-dasharray="4 10" opacity="0.5"/>
+  <circle cx="100" cy="100" r="60" fill="none" stroke="var(--accent)" stroke-width="1" opacity="0.35"/>
+</svg>
+
+<div class="auth-wrap">
+  <div class="brand-row">
+    <svg class="brand-mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100" height="100" rx="22" fill="#10121a"/>
+      <circle cx="50" cy="50" r="33" fill="none" stroke="#f2a93b" stroke-width="6" stroke-linecap="round" stroke-dasharray="155 210" transform="rotate(135 50 50)"/>
+      <line x1="50" y1="50" x2="68" y2="34" stroke="#f5f3ee" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="50" cy="50" r="5" fill="#f5f3ee"/>
+    </svg>
+    <div class="brand-name">Car<em>-Bay</em></div>
+  </div>
+
+  <div class="auth-hero">
+    <div class="auth-kicker">İnvestisiya Platforması</div>
+    <h1 class="auth-title" id="titleText">Hesabınıza daxil olun</h1>
+    <p class="auth-sub">Avtomobil portfelinizi idarə edin, gündəlik gəlirinizi izləyin.</p>
+  </div>
+
+  <div class="auth-card">
+    <div class="seg" role="tablist">
+      <button type="button" id="tab-login" class="active">Daxil ol</button>
+      <button type="button" id="tab-register">Qeydiyyat</button>
+    </div>
+
+    <form id="auth-form" autocomplete="on">
+      <div class="field" id="fullname-field">
+        <label for="fullname">Ad və Soyad</label>
+        <input class="input" type="text" id="fullname" placeholder="Elvin Məmmədov" autocomplete="name">
+      </div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input class="input" type="email" id="email" placeholder="siz@nümunə.com" autocomplete="email" required>
+      </div>
+      <div class="field" style="margin-bottom:8px;">
+        <label for="password">Şifrə</label>
+        <input class="input" type="password" id="password" placeholder="Ən az 6 simvol" autocomplete="current-password" required>
+      </div>
+
+      <div class="auth-links" id="login-options">
+        <button type="button" id="forgotPassBtn">Şifrəni unutmusunuz?</button>
+        <span></span>
+      </div>
+
+      <div style="margin-top:16px;">
+        <button type="submit" class="ignition-btn" id="mainBtn">
+          <span class="ignition-dot"></span> Daxil ol
+        </button>
+      </div>
+    </form>
+
+    <div class="divider-row" id="google-divider">və ya</div>
+
+    <button type="button" class="google-btn" id="googleBtn">
+      <svg class="google-g" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.9 14.3-5.1l-6.6-5.6C29.6 35.4 26.9 36 24 36c-5.3 0-9.7-3.4-11.3-8.1l-6.6 5.1C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.2 5.6l6.6 5.6C41.7 36 44 30.7 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+      Google ilə davam et
+    </button>
+  </div>
+
+  <div class="switch-line" id="switch-line">
+    Hesabın yoxdur? <span id="switchToRegister">Qeydiyyatdan keç</span>
+  </div>
+</div>
+
+<div class="loading-veil" id="loading"><div class="spinner"></div></div>
+
+<script type="module" src="auth.js"></script>
+</body>
+</html>

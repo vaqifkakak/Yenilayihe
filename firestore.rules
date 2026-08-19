@@ -1,0 +1,123 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default olaraq hər şey bağlıdır
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ============================================================
+    // 1. İSTİFADƏÇİ SƏNƏDİ
+    // ============================================================
+    match /users/{userId} {
+
+      // Bütün daxil olmuş istifadəçilər oxuya bilər (referal axtarışı,
+      // liderlər lövhəsi və admin siyahısı üçün lazımdır)
+      allow read: if request.auth != null;
+
+      // Yeni qeydiyyatdan keçən istifadəçi öz sənədini yarada bilər
+      allow create: if request.auth != null && request.auth.uid == userId;
+
+      // --- Öz profilini yeniləmə (pulla bağlı olmayan sahələr) ---
+      allow update: if request.auth != null && request.auth.uid == userId &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'phone', 'wallet']);
+
+      // --- Öz balansını dəyişmə (alış / gəlir toplama / nağdlaşdırma) ---
+      // QEYD: bu, memarlığın (backend/Cloud Functions olmadan) qaçınılmaz
+      // etibar tavanıdır — bax README.md > Təhlükəsizlik qeydləri.
+      allow update: if request.auth != null && request.auth.uid == userId &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['balance']);
+
+      // --- Maşın alışı: balans azalması TAM olaraq investisiya artımına
+      // bərabər olmalıdır (iki sahə birlikdə, sıxı bağlı) ---
+      allow update: if request.auth != null && request.auth.uid == userId &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['balance', 'totalInvested']) &&
+        request.resource.data.balance < resource.data.balance &&
+        request.resource.data.totalInvested > resource.data.totalInvested &&
+        (resource.data.balance - request.resource.data.balance) ==
+          (request.resource.data.totalInvested - resource.data.totalInvested);
+
+      // --- Gündəlik bonus (check-in): yalnız öz balansını və seriyasını,
+      // yalnız artan istiqamətdə yeniləyə bilər ---
+      allow update: if request.auth != null && request.auth.uid == userId &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['balance', 'lastCheckIn', 'checkInStreak']) &&
+        request.resource.data.balance > resource.data.balance;
+
+      // --- Referal sayının artırılması: dəqiq +1, yalnız həmin sahə ---
+      allow update: if request.auth != null &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['referralsCount']) &&
+        request.resource.data.referralsCount == resource.data.referralsCount + 1;
+
+      // --- Referal komissiyasının ötürülməsi: yalnız gerçək L1/L2/L3
+      // aşağı xəttinizdən gələ bilər, yalnız artan istiqamətdə ---
+      allow update: if request.auth != null && request.auth.uid != userId &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['balance', 'referralEarnings']) &&
+        request.resource.data.balance >= resource.data.balance &&
+        request.resource.data.referralEarnings >= resource.data.referralEarnings &&
+        (
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.referredBy == userId ||
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.referredByL2 == userId ||
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.referredByL3 == userId
+        );
+
+      // --- Admin: istənilən sahəni dəyişə bilər (depozit təsdiqi, ban və s.) ---
+      allow update: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+
+      // Maşın qarajı Subcollection-u
+      match /cars/{carId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow create: if request.auth != null && request.auth.uid == userId;
+        allow update: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Login History
+      match /loginHistory/{logId} {
+        allow create: if request.auth != null && request.auth.uid == userId;
+        allow read: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // ============================================================
+    // 2. MƏHSULLAR (MAŞINLAR)
+    // ============================================================
+    match /products/{productId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
+    // ============================================================
+    // 3. DEPOSİT SORĞULARI
+    // ============================================================
+    match /depositRequests/{reqId} {
+      allow read: if request.auth != null && (
+        request.auth.uid == resource.data.uid ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin"
+      );
+      allow create: if request.auth != null
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.status == "pending"
+                    && request.resource.data.amount > 0;
+      allow update: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
+    // ============================================================
+    // 4. NAĞDLAŞDIRMA SORĞULARI
+    // ============================================================
+    match /withdrawRequests/{reqId} {
+      allow read: if request.auth != null && (
+        request.auth.uid == resource.data.uid ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin"
+      );
+      allow create: if request.auth != null
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.status == "pending"
+                    && request.resource.data.amount > 0;
+      allow update: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+  }
+}
