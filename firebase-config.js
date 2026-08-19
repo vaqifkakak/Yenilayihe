@@ -3,13 +3,13 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCeT-_51j64AvvM6lAth_884ES2voLA484",
-  authDomain: "car-bay-ba243.firebaseapp.com",
-  projectId: "car-bay-ba243",
-  storageBucket: "car-bay-ba243.firebasestorage.app",
-  messagingSenderId: "862417190707",
-  appId: "1:862417190707:web:931fdc6096283356578846",
-  measurementId: "G-7KWDRM593W"
+  apiKey: "AIzaSyD_isJ_NYHqKMmSFolLwrLXBRQrCTmL3x4",
+  authDomain: "yenilayihe-c5a46.firebaseapp.com",
+  projectId: "yenilayihe-c5a46",
+  storageBucket: "yenilayihe-c5a46.firebasestorage.app",
+  messagingSenderId: "260808745664",
+  appId: "1:260808745664:web:c3f40b8e1b99c8e8f2c325",
+  measurementId: "G-091T3655MC"
 };
 
 const app = initializeApp(firebaseConfig);
